@@ -472,7 +472,7 @@ interface CompositeSchemaFeature {
  * written to the device as one complete object in a single message (independently writing fields
  * breaks devices like the SONOFF valve, see zigbee-herdsman-converters #12495/#12510 which were
  * reverted by #12647). We therefore cannot represent an editable composite with stock entities.
- * Instead the schema produced here is published (base64 encoded) as an attribute of a stock `sensor`
+ * Instead the schema produced here is published as an attribute of a stock `sensor`
  * entity, and the external card renders the editor and writes the whole object back in one `set`.
  */
 const COMPOSITE_SCHEMA_OPTIONAL_KEYS = ["description", "unit", "value_min", "value_max", "value_step", "values", "value_on", "value_off"];
@@ -1538,16 +1538,15 @@ export class HomeAssistant extends Extension {
                     // avoids embedding JSON inside a Jinja dict-literal (and the quoting/base64 hacks that
                     // would otherwise require); the card reads `z2m_composite.schema` directly as an object.
                     const jsonAttributesTemplate =
-                        `{"z2m_composite": {"value": {{ value_json['${property}'] | tojson }}, ` +
+                        `{"z2m_composite": {"value": {{ value_json['${property}'] | default(none) | tojson }}, ` +
                         `"property": ${JSON.stringify(property)}, "set_topic": ${JSON.stringify(setTopic)}, "schema": ${stringify(schema)}}}`;
                     discoveryEntries.push({
                         type: "sensor",
                         object_id: property,
-                        mockProperties: [{property: property, value: null}],
                         discovery_payload: {
                             name: endpointName ? `${firstExposeTyped.label} ${endpointName}` : firstExposeTyped.label,
                             state_topic: true,
-                            value_template: `{{ value_json['${property}'] | tojson }}`,
+                            value_template: stateValueTemplate(property, `{{ value_json["${property}"] | tojson }}`),
                             json_attributes_topic: true,
                             json_attributes_template: jsonAttributesTemplate,
                             icon: "mdi:tune-variant",

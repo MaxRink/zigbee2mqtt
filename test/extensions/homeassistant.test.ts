@@ -1377,7 +1377,7 @@ describe("Extension: HomeAssistant", () => {
 
         const payload = JSON.parse(call![1] as string);
         expect(payload.state_topic).toBe("zigbee2mqtt/inovelli_switch");
-        expect(payload.value_template).toBe("{{ value_json['led_effect'] | tojson }}");
+        expect(payload.value_template).toBe('{% if "led_effect" in value_json %}{{ value_json["led_effect"] | tojson }}{% endif %}');
         expect(payload.json_attributes_topic).toBe("zigbee2mqtt/inovelli_switch");
         expect(payload.icon).toBe("mdi:tune-variant");
 
@@ -1385,7 +1385,7 @@ describe("Extension: HomeAssistant", () => {
         // filled via a single Jinja expression. Replacing that expression with `null` must yield valid
         // JSON, which also documents the shape the card consumes.
         const template = payload.json_attributes_template as string;
-        expect(template).toContain("\"value\": {{ value_json['led_effect'] | tojson }}");
+        expect(template).toContain("\"value\": {{ value_json['led_effect'] | default(none) | tojson }}");
         const attributes = JSON.parse(template.replace(/\{\{.*?\}\}/, "null"));
         expect(attributes.z2m_composite.property).toBe("led_effect");
         expect(attributes.z2m_composite.set_topic).toBe("zigbee2mqtt/inovelli_switch/set");
